@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Federation IdP</title>
+</head>
+<body>
+<div class="wrapper">
+    <div class="container">
+        <div class="content">
+            <div class="column one">
+                <form action="/idp/profile/SAML2/Redirect/SSO;jsessionid=hoge?execution=e1s2"
+                      method="post">
+                    <div class="form-element-wrapper">
+                        <label for="username">Username</label>
+                        <input class="form-element form-field" id="username" name="j_username" type="text"
+                               value="">
+                    </div>
+                    <div class="form-element-wrapper">
+                        <label for="password">Password</label>
+                        <input class="form-element form-field" id="password" name="j_password" type="password" value="">
+                    </div>
+                    <div class="form-element-wrapper">
+                        <input id="_shib_idp_revokeConsent" type="checkbox" name="_shib_idp_revokeConsent" value="true">
+                        <label for="_shib_idp_revokeConsent">Clear prior granting of permission for release of your
+                            information to this service.</label>
+                    </div>
+                    <div class="form-element-wrapper">
+                        <button class="form-element form-button" type="submit" name="_eventId_proceed"
+                                onClick="this.childNodes[0].nodeValue='Logging in, please wait...'"
+                        >Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
