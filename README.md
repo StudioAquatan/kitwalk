@@ -1,10 +1,6 @@
 # StudioAquatan/kitwalk
 
-[![CircleCI](https://circleci.com/gh/StudioAquatan/kitwalk.svg?style=svg)](https://circleci.com/gh/StudioAquatan/kitwalk)
-
-[![codecov](https://codecov.io/gh/StudioAquatan/kitwalk/branch/master/graph/badge.svg)](https://codecov.io/gh/StudioAquatan/kitwalk)
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/StudioAquatan/kitwalk)](https://goreportcard.com/report/github.com/StudioAquatan/kitwalk)
+[![CircleCI](https://circleci.com/gh/StudioAquatan/kitwalk.svg?style=svg)](https://circleci.com/gh/StudioAquatan/kitwalk) [![codecov](https://codecov.io/gh/StudioAquatan/kitwalk/branch/master/graph/badge.svg)](https://codecov.io/gh/StudioAquatan/kitwalk) [![Go Report Card](https://goreportcard.com/badge/github.com/StudioAquatan/kitwalk)](https://goreportcard.com/report/github.com/StudioAquatan/kitwalk)
 
 This package will support your automation in your student life with a program written in golang.
 
