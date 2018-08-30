@@ -1,5 +1,11 @@
 # StudioAquatan/kitwalk
 
+[![CircleCI](https://circleci.com/gh/StudioAquatan/kitwalk.svg?style=svg)](https://circleci.com/gh/StudioAquatan/kitwalk)
+
+[![codecov](https://codecov.io/gh/StudioAquatan/kitwalk/branch/master/graph/badge.svg)](https://codecov.io/gh/StudioAquatan/kitwalk)
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/StudioAquatan/kitwalk)](https://goreportcard.com/report/github.com/StudioAquatan/kitwalk)
+
 This package will support your automation in your student life with a program written in golang.
 
 Package `http/net` is very useful and generally used in many situations. `http.Client` is a standard method to access website or send API request ...etc, so `kitwalk` is just a wrapper to get authenticated cookies and store it to your own `http.Client`.
@@ -17,7 +23,7 @@ Other packages
 
 ## Usage
 
-```golang
+```go
 package main
 
 import (
