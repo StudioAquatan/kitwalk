@@ -1,0 +1,71 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/StudioAquatan/kitwalk
+    docker:
+      - image: circleci/golang:1.11
+    environment:
+      - GOCACHE: "/tmp/go/cache"
+      - DEP_VERSION: 0.5.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - vendor-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
+            - dep-v0.5.0
+      - run:
+          name: dep ensure
+          command: |
+            if [ ! -d vendor ]; then
+              if type dep > /dev/null 2>&1; then
+                 curl https://raw.githubusercontent.com/golang/dep/v${DEP_VERSION}/install.sh | sh
+              fi
+              dep ensure -vendor-only
+            fi
+      - save_cache:
+          key: vendor-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
+          paths:
+            - vendor
+      - save_cache:
+          key: dep-v0.5.0
+          paths:
+            - /go/bin/dep
+      - run:
+          name: Install dependencies
+          command: |
+            go get -u golang.org/x/tools/cmd/goimports
+            go get -u github.com/golang/lint/golint
+      - run:
+          name: Run goimports
+          command: test -z "$(goimports -d $(go list -f {{.Dir}} ./... | grep -v /vendor/) | tee /dev/stderr)"
+      - run:
+          name: Run golint
+          command: golint -set_exit_status $(go list -f {{.Dir}} ./... | grep -v /vendor/)
+      - run:
+          name: prepare cache dir if not exists
+          command: mkdir -p $GOCACHE
+      - restore_cache:
+          keys:
+            - build-cache-{{ .Branch }}-{{ .Environment.CIRCLE_PREVIOUS_BUILD_NUM }}
+            - build-cache-master-
+          paths:
+            - /tmp/go/cache
+      - run:
+          name: Run go test
+          command: |
+            echo "mode: atomic" > coverage.txt && \
+              go list ./... | \
+              xargs -n1 -I{} sh -c 'go test -covermode=atomic -coverprofile=coverage.tmp {} && \
+              tail -n +2 coverage.tmp >> coverage.txt' && \
+              rm coverage.tmp
+      - run: bash <(curl -s https://codecov.io/bash)
+      - save_cache:
+          key: build-cache-{{ .Branch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
+          paths:
+            - /tmp/go/cache
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build
