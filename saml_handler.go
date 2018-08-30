@@ -32,8 +32,8 @@ func parseSamlResp(body io.Reader) (string, url.Values, error) {
 	// Parse SAML response form.
 	// When you use a normal browser such as Chrome or FireFox, this form will be submitted automatically.
 	form := doc.Find("form")
-	actionUrl, aUrlExists := form.Attr("action")
-	if !aUrlExists {
+	actionURL, actionURLExists := form.Attr("action")
+	if !actionURLExists {
 		return "", nil, &ShibbolethAuthError{errMsg: "Could not find action url"}
 	}
 	relayState, rStateExists := form.Find("input[name=\"" + DefaultRelayStateKey + "\"]").First().Attr("value")
@@ -45,5 +45,5 @@ func parseSamlResp(body io.Reader) (string, url.Values, error) {
 	authData := url.Values{}
 	authData.Add(DefaultRelayStateKey, relayState)
 	authData.Add(DefaultSAMLResponseKey, samlResponse)
-	return actionUrl, authData, nil
+	return actionURL, authData, nil
 }

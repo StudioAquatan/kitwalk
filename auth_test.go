@@ -71,14 +71,13 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 			req.URL, _ = url.Parse("https://auth.cis.kit.ac.jp/idp/profile/SAML2/Redirect/SSO?execution=e1s1")
 			resp.Body = ioutil.NopCloser(bytes.NewBuffer(authForm))
 			return resp, nil
-		} else {
-			portal, err := ioutil.ReadFile("./samples/internal_auth.html")
-			if err != nil {
-				return nil, err
-			}
-			resp.Body = ioutil.NopCloser(bytes.NewBuffer(portal))
-			return resp, nil
 		}
+		portal, err := ioutil.ReadFile("./samples/internal_auth.html")
+		if err != nil {
+			return nil, err
+		}
+		resp.Body = ioutil.NopCloser(bytes.NewBuffer(portal))
+		return resp, nil
 	} else if req.Method == http.MethodPost {
 		if s.WebStorageConfirmation {
 			err := req.ParseForm()
@@ -86,12 +85,12 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 				return nil, err
 			}
 			q := req.PostForm
-			successVal := q.Get(ShibIdpLsSuccessKey)
-			exceptionVal := q.Get(ShibIdpLsExceptionKey)
-			if successVal != ShibIdpLsSuccessVal && exceptionVal != ShibIdpLsExceptionVal {
+			successVal := q.Get(shibIdpLsSuccessKey)
+			exceptionVal := q.Get(shibIdpLsExceptionKey)
+			if successVal != shibIdpLsSuccessVal && exceptionVal != shibIdpLsExceptionVal {
 				errTmpl := "\n[Expected]\n\t%+v: %+v, %+v: %+v\n\t%+v: %+v, %+v: %+v\n"
-				errMsg := fmt.Sprintf(errTmpl, ShibIdpLsSuccessKey, ShibIdpLsSuccessVal, ShibIdpLsExceptionKey, ShibIdpLsExceptionVal,
-					ShibIdpLsSuccessKey, successVal, ShibIdpLsExceptionKey, exceptionVal)
+				errMsg := fmt.Sprintf(errTmpl, shibIdpLsSuccessKey, shibIdpLsSuccessVal, shibIdpLsExceptionKey, shibIdpLsExceptionVal,
+					shibIdpLsSuccessKey, successVal, shibIdpLsExceptionKey, exceptionVal)
 				return nil, errors.New(errMsg)
 			}
 			authForm, err := ioutil.ReadFile("./samples/auth_form.html")
@@ -115,7 +114,7 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 				relayState := q.Get(DefaultRelayStateKey)
 				samlResponse := q.Get(DefaultSAMLResponseKey)
 				if relayState == validRelayState && samlResponse == validSAMLResp {
-					req.URL, _ = url.Parse(ShibbolethLoginUrl)
+					req.URL, _ = url.Parse(ShibbolethLoginURL)
 					portal, err := ioutil.ReadFile("./samples/internal_auth.html")
 					if err != nil {
 						return nil, err
@@ -123,11 +122,10 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 					s.Authenticated = true
 					resp.Body = ioutil.NopCloser(bytes.NewBuffer(portal))
 					return resp, nil
-				} else {
-					errTmpl := "[Expected]\n\tRelayState: %s SAMLResponse: %s\n[Actual]\n\tRelayState: %s SAMLResponse: %s\n"
-					errMsg := fmt.Sprintf(errTmpl, DefaultRelayStateKey, DefaultSAMLResponseKey, relayState, samlResponse)
-					return nil, errors.New(errMsg)
 				}
+				errTmpl := "[Expected]\n\tRelayState: %s SAMLResponse: %s\n[Actual]\n\tRelayState: %s SAMLResponse: %s\n"
+				errMsg := fmt.Sprintf(errTmpl, DefaultRelayStateKey, DefaultSAMLResponseKey, relayState, samlResponse)
+				return nil, errors.New(errMsg)
 			}
 			if uname == validUsername && passwd == validPasswd {
 				authSuccess, err := ioutil.ReadFile("./samples/auth_success.html")
@@ -136,17 +134,15 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 				}
 				resp.Body = ioutil.NopCloser(bytes.NewBuffer(authSuccess))
 				return resp, nil
-			} else {
-				authFail, err := ioutil.ReadFile("./samples/auth_error.html")
-				if err != nil {
-					return nil, err
-				}
-				resp.Body = ioutil.NopCloser(bytes.NewBuffer(authFail))
-				return resp, nil
 			}
-		} else {
+			authFail, err := ioutil.ReadFile("./samples/auth_error.html")
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(authFail))
 			return resp, nil
 		}
+		return resp, nil
 	} else {
 		return resp, nil
 	}
@@ -154,7 +150,7 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func TestSamlAuthenticator_LoginWith(t *testing.T) {
 	const (
-		baseUrl = "https://portal.student.kit.ac.jp/"
+		baseURL = "https://portal.student.kit.ac.jp/"
 	)
 	t.Run("Login with valid username and password", func(t *testing.T) {
 		authenticator, err := NewAuthenticator(validUsername, validPasswd)
@@ -164,14 +160,14 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 		}
 		err = authenticator.LoginWith(client)
 		check(t, err)
-		resp, err := client.Get(baseUrl)
+		resp, err := client.Get(baseURL)
 		check(t, err)
 		defer func() {
 			io.Copy(ioutil.Discard, resp.Body)
 			resp.Body.Close()
 		}()
-		if resp.Request.URL.String() != baseUrl {
-			t.Errorf("Expect: [GET] %+v\nActual: %+v\n", resp.Request.URL, baseUrl)
+		if resp.Request.URL.String() != baseURL {
+			t.Errorf("Expect: [GET] %+v\nActual: %+v\n", resp.Request.URL, baseURL)
 		}
 	})
 	t.Run("Login with invalid password", func(t *testing.T) {
@@ -195,14 +191,14 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 		client.Transport = &samlMock{Authenticated: false}
 		err = authenticator.LoginWith(nil)
 		check(t, err)
-		resp, err := client.Get(baseUrl)
+		resp, err := client.Get(baseURL)
 		check(t, err)
 		defer func() {
 			io.Copy(ioutil.Discard, resp.Body)
 			resp.Body.Close()
 		}()
-		if resp.Request.URL.String() != baseUrl {
-			t.Errorf("Expect: [GET] %+v\nActual: %+v\n", resp.Request.URL, baseUrl)
+		if resp.Request.URL.String() != baseURL {
+			t.Errorf("Expect: [GET] %+v\nActual: %+v\n", resp.Request.URL, baseURL)
 		}
 	})
 	t.Run("Skip WebStorage Confirmation", func(t *testing.T) {
@@ -244,7 +240,7 @@ func TestSamlAuthenticator_SetupWith(t *testing.T) {
 			ShibbolethPasswordKey: DefaultPasswdKey,
 			ShibbolethUsernameKey: DefaultUnameKey,
 			ShibbolethAuthDomain:  DefaultAuthDomain,
-			ShibbolethLoginUrl:    ShibbolethLoginUrl,
+			ShibbolethLoginURL:    ShibbolethLoginURL,
 		}
 		err = authenticator.SetupWith(testConf)
 		switch e := err.(type) {

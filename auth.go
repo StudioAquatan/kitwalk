@@ -7,17 +7,20 @@ import (
 	"net/http/cookiejar"
 )
 
+// Auth is an interface for http.Client
 type Auth interface {
 	LoginWith(client *http.Client) error
 	SetupWith(config Config) error
 	LoginAs(username string, password string) error
 }
 
+// User is an user belonging to the authentication destination
 type User struct {
 	Username string
 	Password string
 }
 
+// SamlAuthenticator has Config and User. This struct implement Auth interface.
 type SamlAuthenticator struct {
 	User   *User
 	Config Config
@@ -27,7 +30,6 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	var (
 		err error
 	)
-	defer resp.Body.Close()
 	// When Web Storage confirmation page appear, skip it.
 	if isContinueRequired(resp.Body) {
 		resp, err = client.PostForm(resp.Request.URL.String(), c.Config.ShibbolethPassConfirmationParams)
@@ -47,12 +49,12 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	}
 	defer authResp.Body.Close()
 	// Extract SAML response
-	actionUrl, data, err := parseSamlResp(authResp.Body)
+	actionURL, data, err := parseSamlResp(authResp.Body)
 	if err != nil {
 		return err
 	}
 	// Redirect to target resource, and respond with target resource.
-	authResult, err := client.PostForm(actionUrl, data)
+	authResult, err := client.PostForm(actionURL, data)
 	if err != nil {
 		return err
 	}
@@ -66,6 +68,8 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	return nil
 }
 
+// LoginWith works with given http.Client to auth.
+// The client store cookie information to be used for next authentication.
 func (c *SamlAuthenticator) LoginWith(client *http.Client) error {
 	if client == nil {
 		client = http.DefaultClient
@@ -77,16 +81,19 @@ func (c *SamlAuthenticator) LoginWith(client *http.Client) error {
 		}
 		client.Jar = jar
 	}
-	resp, err := client.Get(ShibbolethLoginUrl)
+	resp, err := client.Get(ShibbolethLoginURL)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.Request.URL.Host == c.Config.ShibbolethAuthDomain {
-		return c.auth(client, resp)
+		err = c.auth(client, resp)
+		return err
 	}
 	return nil
 }
 
+// SetupWith attach given configuration to authenticator.
 func (c *SamlAuthenticator) SetupWith(config Config) error {
 	// Set auth info
 	if config.ShibbolethHiddenParams == nil && config.ShibbolethPassConfirmationParams == nil {
@@ -107,6 +114,7 @@ func (c *SamlAuthenticator) SetupWith(config Config) error {
 	return nil
 }
 
+// LoginAs switch user to authenticate with
 func (c *SamlAuthenticator) LoginAs(username string, password string) error {
 	if err := isValidUsername(username); err != nil {
 		return err
@@ -120,6 +128,7 @@ func (c *SamlAuthenticator) LoginAs(username string, password string) error {
 	return nil
 }
 
+// NewAuthenticator create new authenticator with given auth information.
 func NewAuthenticator(username string, password string) (Auth, error) {
 	if err := isValidUsername(username); err != nil {
 		return nil, err
