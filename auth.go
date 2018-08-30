@@ -1,8 +1,6 @@
 package kitwalk
 
 import (
-	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 )
@@ -28,22 +26,20 @@ type SamlAuthenticator struct {
 
 func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error {
 	var (
-		err error
+		err     error
+		tmpResp = resp
 	)
 	// When Web Storage confirmation page appear, skip it.
 	if isContinueRequired(resp.Body) {
-		resp, err = client.PostForm(resp.Request.URL.String(), c.Config.ShibbolethPassConfirmationParams)
+		resp, err = client.PostForm(tmpResp.Request.URL.String(), c.Config.ShibbolethPassConfirmationParams)
 		if err != nil {
 			return err
 		}
-		defer func() {
-			io.Copy(ioutil.Discard, resp.Body)
-			resp.Body.Close()
-		}()
+		defer tmpResp.Body.Close()
 	}
 
 	// Post auth info to auth page
-	authResp, err := client.PostForm(resp.Request.URL.String(), c.Config.ShibbolethHiddenParams)
+	authResp, err := client.PostForm(tmpResp.Request.URL.String(), c.Config.ShibbolethHiddenParams)
 	if err != nil {
 		return err
 	}
@@ -58,10 +54,7 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	if err != nil {
 		return err
 	}
-	defer func() {
-		io.Copy(ioutil.Discard, authResult.Body)
-		authResult.Body.Close()
-	}()
+	defer authResult.Body.Close()
 	if authResult.Request.URL.Host == DefaultAuthDomain {
 		return &ShibbolethAuthError{errMsg: "Try to auth, but return login page yet."}
 	}

@@ -88,7 +88,7 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 			successVal := q.Get(shibIdpLsSuccessKey)
 			exceptionVal := q.Get(shibIdpLsExceptionKey)
 			if successVal != shibIdpLsSuccessVal && exceptionVal != shibIdpLsExceptionVal {
-				errTmpl := "\n[Expected]\n\t%+v: %+v, %+v: %+v\n\t%+v: %+v, %+v: %+v\n"
+				const errTmpl = "\n[Expected]\n\t%+v: %+v, %+v: %+v\n\t%+v: %+v, %+v: %+v\n"
 				errMsg := fmt.Sprintf(errTmpl, shibIdpLsSuccessKey, shibIdpLsSuccessVal, shibIdpLsExceptionKey, shibIdpLsExceptionVal,
 					shibIdpLsSuccessKey, successVal, shibIdpLsExceptionKey, exceptionVal)
 				return nil, errors.New(errMsg)
@@ -123,7 +123,7 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 					resp.Body = ioutil.NopCloser(bytes.NewBuffer(portal))
 					return resp, nil
 				}
-				errTmpl := "[Expected]\n\tRelayState: %s SAMLResponse: %s\n[Actual]\n\tRelayState: %s SAMLResponse: %s\n"
+				const errTmpl = "[Expected]\n\tRelayState: %s SAMLResponse: %s\n[Actual]\n\tRelayState: %s SAMLResponse: %s\n"
 				errMsg := fmt.Sprintf(errTmpl, DefaultRelayStateKey, DefaultSAMLResponseKey, relayState, samlResponse)
 				return nil, errors.New(errMsg)
 			}
@@ -149,6 +149,7 @@ func (s *samlMock) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func TestSamlAuthenticator_LoginWith(t *testing.T) {
+	t.Parallel()
 	const (
 		baseURL = "https://portal.student.kit.ac.jp/"
 	)
@@ -216,6 +217,7 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 }
 
 func TestSamlAuthenticator_LoginAs(t *testing.T) {
+	t.Parallel()
 	t.Run("Login as valid user", func(t *testing.T) {
 		authenticator, err := NewAuthenticator(validUsername, validPasswd)
 		check(t, err)
@@ -233,6 +235,7 @@ func TestSamlAuthenticator_LoginAs(t *testing.T) {
 }
 
 func TestSamlAuthenticator_SetupWith(t *testing.T) {
+	t.Parallel()
 	t.Run("Setup with nil config", func(t *testing.T) {
 		authenticator, err := NewAuthenticator(validUsername, validPasswd)
 		check(t, err)

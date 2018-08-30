@@ -1,9 +1,10 @@
 package kitwalk
 
 import (
-	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/url"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func isContinueRequired(body io.Reader) bool {

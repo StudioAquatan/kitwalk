@@ -3,6 +3,7 @@ package kitwalk
 import "testing"
 
 func TestIsValidUsername(t *testing.T) {
+	t.Parallel()
 	var (
 		prefixes    = [...]string{"b", "m", "d"}
 		num         = "1234567"
