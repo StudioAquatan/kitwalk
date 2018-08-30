@@ -25,7 +25,7 @@ package main
 import (
     "net/http"
 
-    "github.com/StudioAquatan/kitwalk
+    "github.com/StudioAquatan/kitwalk"
 )
 
 func main() {
@@ -54,6 +54,18 @@ func main() {
 }
 ```
 
+**NOTE**
+
+Shibboleth authentication will revoke after few hours. If the website require to authenticate again, you should use `LoginWith` again. If you logged in and the website require to re-authenticate, `LoginWith` cannot works well, I think. So, this package only support
+
+1. **Short life cycle work**
+    - For example, scraping every minutes, CLI tool, ... etc.
+    - You should clear the cookie properly and periodically if your program run for a long time.
+2. **No re-authentication**
+    - I don't know such a situation will occur, kitwalk doesn't support that.
+    - For example, in other services, re-auth is required when you change password or perform administrative activity.
+
+Please be careful to use. **DON'T PUSH YOUR USERNAME OR PASSWORD TO YOUR REPOSITORY.**
 
 ## License
 

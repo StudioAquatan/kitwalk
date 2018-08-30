@@ -132,3 +132,6 @@ Temporary Items
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
+
+.idea/markdown-*.xml
+.idea/markdown-navigator/*
