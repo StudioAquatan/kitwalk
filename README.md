@@ -11,7 +11,6 @@ Just create `http.Client` instance, and give it to this package, now you can acc
 ## Environment
 
 - Go 1.10 or later
-- Dep v0.5.0 or later
 
 Other packages
 
@@ -33,6 +32,23 @@ Shibboleth authentication will revoke after few hours. If the website require to
     - For example, in other services, re-auth is required when you change password or perform administrative activity.
 
 Please be careful to use. **DON'T PUSH YOUR USERNAME OR PASSWORD TO YOUR REPOSITORY.**
+
+## Development
+
+We welcome your contribution! Please commit any fix or improvement.
+
+To fix version of packages, you should use `dep`.
+
+- Dep v0.5.0 or later
+
+### Release
+
+1. Write documents
+    - examples/main.go
+    - README.md
+2. `git commit -a -m 'Release v${VERSION}'`
+3. `git tag v${VERSION}`
+4. `git push origin master --tags`
 
 ## License
 
