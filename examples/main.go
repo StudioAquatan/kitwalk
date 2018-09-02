@@ -37,6 +37,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer resp.Body.Close()
 	// 200 https://portal.student.kit.ac.jp/
 	fmt.Println(resp.StatusCode, resp.Request.URL)
 }

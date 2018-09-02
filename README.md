@@ -19,40 +19,7 @@ Other packages
 
 ## Usage
 
-```go
-package main
-
-import (
-    "net/http"
-
-    "github.com/StudioAquatan/kitwalk"
-)
-
-func main() {
-    // Create client
-    client := http.DefaultClient
-    // Create authenticator
-    // NOTE: Authentication has not been executed yet in this step.
-    authenticator, err := NewAuthenticator("your username", "your password")
-    if err != nil {
-        panic(err)
-    }
-    // Login
-    // If you use http.DefaultClient, you just set nil to `LoginWith`.
-    err = authenticator.LoginWith(client)
-    if err != nil {
-        // Auth fail or server is down or ... etc
-        panic(err)
-    }
-    // Success to auth!
-    resp, err := client.Get("https://portal.student.kit.ac.jp/")
-    if err != nil {
-        panic(err)
-    }
-    defer resp.Body.Close()
-    fmt.Println(resp.Request.StatusCode)
-}
-```
+See [example](./examples/main.go)
 
 **NOTE**
 
