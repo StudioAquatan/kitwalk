@@ -2,6 +2,7 @@ package kitwalk
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -28,11 +29,13 @@ func check(t *testing.T, err error) {
 
 func TestNewAuthenticator(t *testing.T) {
 	t.Run("Get new authenticator", func(t *testing.T) {
-		_, err := NewAuthenticator(validUsername, validPasswd)
+		ctx := context.Background()
+		_, err := NewAuthenticator(ctx, validUsername, validPasswd)
 		check(t, err)
 	})
 	t.Run("Get authenticator with invalid username", func(t *testing.T) {
-		_, err := NewAuthenticator(invalidUsername, validPasswd)
+		ctx := context.Background()
+		_, err := NewAuthenticator(ctx, invalidUsername, validPasswd)
 		switch e := err.(type) {
 		case *InvalidUsernameError:
 			// No problem
@@ -154,7 +157,8 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 		baseURL = "https://portal.student.kit.ac.jp/"
 	)
 	t.Run("Login with valid username and password", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, validPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, validPasswd)
 		check(t, err)
 		client := &http.Client{
 			Transport: &samlMock{Authenticated: false},
@@ -172,7 +176,8 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 		}
 	})
 	t.Run("Login with invalid password", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, invalidPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, invalidPasswd)
 		check(t, err)
 		client := &http.Client{
 			Transport: &samlMock{Authenticated: false},
@@ -186,7 +191,8 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 		}
 	})
 	t.Run("Login with nil client", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, validPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, validPasswd)
 		check(t, err)
 		client := http.DefaultClient
 		client.Transport = &samlMock{Authenticated: false}
@@ -203,7 +209,8 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 		}
 	})
 	t.Run("Skip WebStorage Confirmation", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, validPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, validPasswd)
 		check(t, err)
 		client := &http.Client{
 			Transport: &samlMock{
@@ -219,14 +226,16 @@ func TestSamlAuthenticator_LoginWith(t *testing.T) {
 func TestSamlAuthenticator_LoginAs(t *testing.T) {
 	t.Parallel()
 	t.Run("Login as valid user", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, validPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, validPasswd)
 		check(t, err)
 		if err := authenticator.LoginAs(validUsername, validPasswd); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("Login as invalid user", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, invalidPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, invalidPasswd)
 		check(t, err)
 		if err := authenticator.LoginAs(invalidUsername, validPasswd); err == nil {
 			t.Error("Expect: InvalidUsernameError\nActual: (nil)")
@@ -237,7 +246,8 @@ func TestSamlAuthenticator_LoginAs(t *testing.T) {
 func TestSamlAuthenticator_SetupWith(t *testing.T) {
 	t.Parallel()
 	t.Run("Setup with nil config", func(t *testing.T) {
-		authenticator, err := NewAuthenticator(validUsername, validPasswd)
+		ctx := context.Background()
+		authenticator, err := NewAuthenticator(ctx, validUsername, validPasswd)
 		check(t, err)
 		testConf := Config{
 			ShibbolethPasswordKey: DefaultPasswdKey,
