@@ -1,8 +1,15 @@
 package kitwalk
 
 import (
+	"context"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
+)
+
+const (
+	contentTypeHead = "Content-Type"
+	contentTypeVal  = "application/x-www-form-urlencoded"
 )
 
 // Auth is an interface for http.Client
@@ -22,6 +29,7 @@ type User struct {
 type SamlAuthenticator struct {
 	User   *User
 	Config Config
+	ctx    context.Context
 }
 
 func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error {
@@ -31,7 +39,14 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	)
 	// When Web Storage confirmation page appear, skip it.
 	if isContinueRequired(resp.Body) {
-		resp, err = client.PostForm(tmpResp.Request.URL.String(), c.Config.ShibbolethPassConfirmationParams)
+		param := strings.NewReader(c.Config.ShibbolethPassConfirmationParams.Encode())
+		crReq, err := http.NewRequest(http.MethodPost, tmpResp.Request.URL.String(), param)
+		if err != nil {
+			return err
+		}
+		crReq = crReq.WithContext(c.ctx)
+		crReq.Header.Add(contentTypeHead, contentTypeVal)
+		tmpResp, err = client.Do(crReq)
 		if err != nil {
 			return err
 		}
@@ -39,7 +54,14 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	}
 
 	// Post auth info to auth page
-	authResp, err := client.PostForm(tmpResp.Request.URL.String(), c.Config.ShibbolethHiddenParams)
+	param := strings.NewReader(c.Config.ShibbolethHiddenParams.Encode())
+	authReq, err := http.NewRequest(http.MethodPost, tmpResp.Request.URL.String(), param)
+	if err != nil {
+		return err
+	}
+	authReq = authReq.WithContext(c.ctx)
+	authReq.Header.Add(contentTypeHead, contentTypeVal)
+	authResp, err := client.Do(authReq)
 	if err != nil {
 		return err
 	}
@@ -50,7 +72,14 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 		return err
 	}
 	// Redirect to target resource, and respond with target resource.
-	authResult, err := client.PostForm(actionURL, data)
+	param = strings.NewReader(data.Encode())
+	authResReq, err := http.NewRequest(http.MethodPost, actionURL, param)
+	if err != nil {
+		return err
+	}
+	authResReq = authResReq.WithContext(c.ctx)
+	authResReq.Header.Add(contentTypeHead, contentTypeVal)
+	authResult, err := client.Do(authResReq)
 	if err != nil {
 		return err
 	}
@@ -74,7 +103,12 @@ func (c *SamlAuthenticator) LoginWith(client *http.Client) error {
 		}
 		client.Jar = jar
 	}
-	resp, err := client.Get(ShibbolethLoginURL)
+	getReq, err := http.NewRequest(http.MethodGet, ShibbolethLoginURL, nil)
+	if err != nil {
+		return err
+	}
+	getReq = getReq.WithContext(c.ctx)
+	resp, err := client.Do(getReq)
 	if err != nil {
 		return err
 	}
@@ -122,7 +156,7 @@ func (c *SamlAuthenticator) LoginAs(username string, password string) error {
 }
 
 // NewAuthenticator create new authenticator with given auth information.
-func NewAuthenticator(username string, password string) (Auth, error) {
+func NewAuthenticator(ctx context.Context, username string, password string) (Auth, error) {
 	if err := isValidUsername(username); err != nil {
 		return nil, err
 	}
@@ -131,6 +165,7 @@ func NewAuthenticator(username string, password string) (Auth, error) {
 	authenticator := &SamlAuthenticator{
 		User:   user,
 		Config: *defaultConfig,
+		ctx:    ctx,
 	}
 	err := authenticator.SetupWith(*defaultConfig)
 	if err != nil {
