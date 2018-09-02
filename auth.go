@@ -1,6 +1,7 @@
 package kitwalk
 
 import (
+	"context"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
@@ -28,6 +29,7 @@ type User struct {
 type SamlAuthenticator struct {
 	User   *User
 	Config Config
+	ctx    context.Context
 }
 
 func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error {
@@ -42,6 +44,7 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 		if err != nil {
 			return err
 		}
+		crReq = crReq.WithContext(c.ctx)
 		crReq.Header.Add(contentTypeHead, contentTypeVal)
 		tmpResp, err = client.Do(crReq)
 		if err != nil {
@@ -56,6 +59,7 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	if err != nil {
 		return err
 	}
+	authReq = authReq.WithContext(c.ctx)
 	authReq.Header.Add(contentTypeHead, contentTypeVal)
 	authResp, err := client.Do(authReq)
 	if err != nil {
@@ -73,6 +77,7 @@ func (c *SamlAuthenticator) auth(client *http.Client, resp *http.Response) error
 	if err != nil {
 		return err
 	}
+	authResReq = authResReq.WithContext(c.ctx)
 	authResReq.Header.Add(contentTypeHead, contentTypeVal)
 	authResult, err := client.Do(authResReq)
 	if err != nil {
@@ -102,6 +107,7 @@ func (c *SamlAuthenticator) LoginWith(client *http.Client) error {
 	if err != nil {
 		return err
 	}
+	getReq = getReq.WithContext(c.ctx)
 	resp, err := client.Do(getReq)
 	if err != nil {
 		return err
@@ -150,7 +156,7 @@ func (c *SamlAuthenticator) LoginAs(username string, password string) error {
 }
 
 // NewAuthenticator create new authenticator with given auth information.
-func NewAuthenticator(username string, password string) (Auth, error) {
+func NewAuthenticator(ctx context.Context, username string, password string) (Auth, error) {
 	if err := isValidUsername(username); err != nil {
 		return nil, err
 	}
@@ -159,6 +165,7 @@ func NewAuthenticator(username string, password string) (Auth, error) {
 	authenticator := &SamlAuthenticator{
 		User:   user,
 		Config: *defaultConfig,
+		ctx:    ctx,
 	}
 	err := authenticator.SetupWith(*defaultConfig)
 	if err != nil {
