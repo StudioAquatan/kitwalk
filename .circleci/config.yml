@@ -16,7 +16,7 @@ jobs:
       - run:
           name: dep ensure
           command: |
-            if type dep > /dev/null 2>&1; then
+            if ! type dep > /dev/null 2>&1; then
                curl https://raw.githubusercontent.com/golang/dep/v${DEP_VERSION}/install.sh | sh
             fi
             dep ensure -vendor-only
