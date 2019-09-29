@@ -3,31 +3,21 @@ jobs:
   build:
     working_directory: /go/src/github.com/StudioAquatan/kitwalk
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12.10
     environment:
-      - GOCACHE: "/tmp/go/cache"
-      - DEP_VERSION: 0.5.0
+      - GO111MODULE: "on"
     steps:
       - checkout
       - restore_cache:
           keys:
-            - vendor-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
-            - dep-v0.5.0
+            - gomod-{{ .Branch }}-{{ checksum "go.mod" }}
       - run:
-          name: dep ensure
-          command: |
-            if ! type dep > /dev/null 2>&1; then
-               curl https://raw.githubusercontent.com/golang/dep/v${DEP_VERSION}/install.sh | sh
-            fi
-            dep ensure -vendor-only
+          name: go mod download
+          command: go mod download
       - save_cache:
-          key: vendor-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
+          key: gomod-{{ .Branch }}-{{ checksum "go.mod" }}
           paths:
-            - vendor
-      - save_cache:
-          key: dep-v0.5.0
-          paths:
-            - /go/bin/dep
+            - /go/pkg/mod/cache
       - run:
           name: Install dependencies
           command: |
@@ -40,15 +30,6 @@ jobs:
           name: Run golint
           command: golint -set_exit_status $(go list -f {{.Dir}} ./... | grep -v /vendor/)
       - run:
-          name: prepare cache dir if not exists
-          command: mkdir -p $GOCACHE
-      - restore_cache:
-          keys:
-            - build-cache-{{ .Branch }}-{{ .Environment.CIRCLE_PREVIOUS_BUILD_NUM }}
-            - build-cache-master-
-          paths:
-            - /tmp/go/cache
-      - run:
           name: Run go test
           command: |
             echo "mode: atomic" > coverage.txt && \
@@ -57,10 +38,6 @@ jobs:
               tail -n +2 coverage.tmp >> coverage.txt' && \
               rm coverage.tmp
       - run: bash <(curl -s https://codecov.io/bash)
-      - save_cache:
-          key: build-cache-{{ .Branch }}-{{ .Environment.CIRCLE_BUILD_NUM }}
-          paths:
-            - /tmp/go/cache
 
 workflows:
   version: 2
