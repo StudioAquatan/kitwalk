@@ -1,14 +1,9 @@
 version: 2
 jobs:
   build:
-    parameters:
-      go-version:
-        type: string
-      golangci-lint-version:
-        type: string
     working_directory: /go/src/github.com/StudioAquatan/kitwalk
     docker:
-      - image: circleci/golang:<< parameters.go-version >>
+      - image: circleci/golang:1.12.10
     environment:
       - GO111MODULE: "on"
     steps:
@@ -25,7 +20,7 @@ jobs:
             - /go/pkg/mod/cache
       - run:
           name: Install GolangCI-Lint
-          command: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v<< parameters.golangci-lint-version >>
+          command: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.19.1
       - run:
           name: Run GolangCI-Lint
           command: ./bin/golangci-lint run --tests --disable-all --enable=goimports --enable=golint --enable=govet
@@ -43,6 +38,4 @@ workflows:
   version: 2
   main:
     jobs:
-      - build:
-          go-version: "1.12.10"
-          golangci-lint-version: "1.19.1"
+      - build
