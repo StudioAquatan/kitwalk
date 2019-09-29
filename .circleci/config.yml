@@ -1,9 +1,14 @@
 version: 2
 jobs:
   build:
+    parameters:
+      go-version:
+        type: string
+      golangci-lint-version:
+        type: string
     working_directory: /go/src/github.com/StudioAquatan/kitwalk
     docker:
-      - image: circleci/golang:1.12.10
+      - image: circleci/golang:<< parameters.go-version >>
     environment:
       - GO111MODULE: "on"
     steps:
@@ -39,3 +44,5 @@ workflows:
   main:
     jobs:
       - build
+          go-version: "1.12.10"
+          golangci-lint-version: "1.19.1"
